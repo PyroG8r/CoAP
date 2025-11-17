@@ -1,0 +1,29 @@
+cmake_minimum_required(VERSION 3.16)
+
+project(CoAPClient LANGUAGES CXX)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(COAP_ENABLE_WARNINGS "Enable extra compiler warnings" ON)
+
+set(_warning_flags -Wall -Wextra -Wpedantic)
+
+add_executable(coap_client src/main.cpp)
+if(COAP_ENABLE_WARNINGS)
+    target_compile_options(coap_client PRIVATE ${_warning_flags})
+endif()
+
+add_executable(unit_tests tests/smoke_tests.cpp)
+target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests)
+if(COAP_ENABLE_WARNINGS)
+    target_compile_options(unit_tests PRIVATE ${_warning_flags})
+endif()
+
+enable_testing()
+add_test(NAME unit_tests COMMAND unit_tests)
