@@ -14,13 +14,21 @@ option(COAP_ENABLE_WARNINGS "Enable extra compiler warnings" ON)
 
 set(_warning_flags -Wall -Wextra -Wpedantic)
 
-add_executable(coap_client src/main.cpp)
+add_executable(coap_client
+    src/main.cpp
+    src/message.cpp
+)
 if(COAP_ENABLE_WARNINGS)
     target_compile_options(coap_client PRIVATE ${_warning_flags})
 endif()
 
-add_executable(unit_tests tests/smoke_tests.cpp)
+add_executable(unit_tests
+    tests/smoke_tests.cpp
+    src/message.cpp
+)
 target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests)
+target_include_directories(coap_client PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/include)
 if(COAP_ENABLE_WARNINGS)
     target_compile_options(unit_tests PRIVATE ${_warning_flags})
 endif()
