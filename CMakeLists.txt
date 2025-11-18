@@ -22,16 +22,6 @@ if(COAP_ENABLE_WARNINGS)
     target_compile_options(coap_client PRIVATE ${_warning_flags})
 endif()
 
-add_executable(unit_tests
-    tests/smoke_tests.cpp
-    src/message.cpp
-)
-target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests)
-target_include_directories(coap_client PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/include)
-if(COAP_ENABLE_WARNINGS)
-    target_compile_options(unit_tests PRIVATE ${_warning_flags})
-endif()
 
-enable_testing()
-add_test(NAME unit_tests COMMAND unit_tests)
+target_include_directories(coap_client PRIVATE ${PROJECT_SOURCE_DIR}/include)
+

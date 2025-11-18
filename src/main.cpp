@@ -11,12 +11,13 @@
 int main() {
     coap::Header header;
     header.version = 1;
-    header.type = coap::Type::Confirmable;
+    header.type = coap::Type::NonConfirmable;
     header.code = 1; 
+    header.message_id = 12345;
 
     coap::Message message;
     message.set_header(header);
-    message.set_token({0x12, 0x34});
 
+    
     return 0;
 }

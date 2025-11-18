@@ -14,11 +14,12 @@ enum class Type : std::uint8_t {
     Reset = 3
 };
 
+// CoAP message header structure, 4 bytes
 struct Header {
     std::uint8_t version {1};
     Type type {Type::Confirmable};
     std::uint8_t token_length {0};
-    std::uint8_t code {1};  // 0.01 GET
+    std::uint8_t code {1};  
     std::uint16_t message_id {0};
 };
 
