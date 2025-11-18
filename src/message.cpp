@@ -5,9 +5,7 @@
 
 namespace coap {
 
-namespace {
-
-std::uint8_t encode_first_byte(const Header& header) {
+std::uint8_t Message::encode_first_byte(const Header& header) {
     std::uint8_t value = 0;
     value |= (header.version & 0x03) << 6;
     value |= (static_cast<std::uint8_t>(header.type) & 0x03) << 4;
@@ -18,7 +16,7 @@ std::uint8_t encode_first_byte(const Header& header) {
 /* 
     * Decodes the header from the given buffer.
 */ 
-Header decode_header(const std::vector<std::uint8_t>& buffer) {
+Header Message::decode_header(const std::vector<std::uint8_t>& buffer) {
     Header header;
     std::uint8_t first_byte = buffer[0];
     header.version = (first_byte >> 6) & 0x03;
@@ -27,32 +25,7 @@ Header decode_header(const std::vector<std::uint8_t>& buffer) {
     header.code = buffer[1];
     header.message_id = (static_cast<std::uint16_t>(buffer[2]) << 8) | buffer[3];
     return header;
-}
-
 } 
-
-void Message::set_header(Header header) {
-    this->header = header;
-}
-
-const Header& Message::get_header() const {
-    return header;
-}
-void Message::set_token(std::vector<std::uint8_t> token) {
-    this->token = std::move(token);
-}
-
-const std::vector<std::uint8_t>& Message::get_token() const {
-    return token;
-}
-
-void Message::set_payload(std::vector<std::uint8_t> payload) {
-    this->payload = std::move(payload);
-}
-
-const std::vector<std::uint8_t>& Message::get_payload() const {
-    return payload;
-}
 
 std::vector<std::uint8_t> Message::serialize() const {
     std::vector<std::uint8_t> buffer;
@@ -95,6 +68,29 @@ Message Message::parse(const std::vector<std::uint8_t>& buffer) {
     
     return message;
 
+}
+
+void Message::set_header(Header header) {
+    this->header = header;
+}
+
+const Header& Message::get_header() const {
+    return header;
+}
+void Message::set_token(std::vector<std::uint8_t> token) {
+    this->token = std::move(token);
+}
+
+const std::vector<std::uint8_t>& Message::get_token() const {
+    return token;
+}
+
+void Message::set_payload(std::vector<std::uint8_t> payload) {
+    this->payload = std::move(payload);
+}
+
+const std::vector<std::uint8_t>& Message::get_payload() const {
+    return payload;
 }
 
 }  // namespace coap

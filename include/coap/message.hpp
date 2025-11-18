@@ -39,6 +39,9 @@ public:
     static Message parse(const std::vector<std::uint8_t>& buffer);
 
 private:
+    static std::uint8_t encode_first_byte(const Header& header);
+    static Header decode_header(const std::vector<std::uint8_t>& buffer);
+
     Header header {};
     std::vector<std::uint8_t> token {};
     std::vector<std::uint8_t> payload {};
