@@ -5,10 +5,7 @@
 
 int main() {
     coap::Client client;
-    
-    if (!client.connect("134.102.218.18", 5683)) {
-        return 1;
-    }
+    client.connect("134.102.218.18", 5683);
 
     // Build a simple GET request
     coap::Header header;

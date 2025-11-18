@@ -11,35 +11,23 @@ namespace coap {
 
 Client::Client() {
     client_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (client_socket < 0) {
-        std::cerr << "Failed to create socket\n";
-    }
 }
 
 Client::~Client() {
     close();
 }
 
-bool Client::connect(const std::string& host, int port) {
-    server_addr_ = {};
-    server_addr_.sin_family = AF_INET;
-    server_addr_.sin_port = htons(port);
-    
-    if (inet_pton(AF_INET, host.c_str(), &server_addr_.sin_addr) <= 0) {
-        std::cerr << "Invalid address: " << host << "\n";
-        return false;
-    }
-    return true;
+void Client::connect(const std::string& host, int port) {
+    server_address = {};
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(port);
+    inet_pton(AF_INET, host.c_str(), &server_address.sin_addr);
 }
 
 bool Client::send(const Message& message) {
-    if (client_socket < 0) {
-        return false;
-    }
-
     auto bytes = message.serialize();
     ssize_t sent = sendto(client_socket, bytes.data(), bytes.size(), 0,
-                          (struct sockaddr*)&server_addr_, sizeof(server_addr_));
+                          (struct sockaddr*)&server_address, sizeof(server_address));
     return sent > 0;
 }
 
