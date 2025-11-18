@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <vector>
+#include "coap/code.hpp"
 
 namespace coap {
 
@@ -19,7 +19,7 @@ struct Header {
     std::uint8_t version {1};
     Type type {Type::Confirmable};
     std::uint8_t token_length {0};
-    std::uint8_t code {1};  
+    Code code {Code::GET()};
     std::uint16_t message_id {0};
 };
 

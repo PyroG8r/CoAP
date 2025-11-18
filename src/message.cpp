@@ -22,7 +22,7 @@ Header Message::decode_header(const std::vector<std::uint8_t>& buffer) {
     header.version = (first_byte >> 6) & 0x03;
     header.type = static_cast<Type>((first_byte >> 4) & 0x03);
     header.token_length = first_byte & 0x0F;
-    header.code = buffer[1];
+    header.code = Code(buffer[1]);
     header.message_id = (static_cast<std::uint16_t>(buffer[2]) << 8) | buffer[3];
     return header;
 } 
@@ -30,7 +30,7 @@ Header Message::decode_header(const std::vector<std::uint8_t>& buffer) {
 std::vector<std::uint8_t> Message::serialize() const {
     std::vector<std::uint8_t> buffer;
     buffer.push_back(encode_first_byte(header));
-    buffer.push_back(header.code);
+    buffer.push_back(header.code.raw());
     buffer.push_back(static_cast<std::uint8_t>((header.message_id >> 8) & 0xFF));
     buffer.push_back(static_cast<std::uint8_t>(header.message_id & 0xFF));
     buffer.insert(buffer.end(), token.begin(), token.end());

@@ -12,7 +12,7 @@ int main() {
     header.version = 1;
     header.type = coap::Type::Confirmable;
     header.token_length = 0;
-    header.code = 1;  // GET
+    header.code = coap::Code::GET();
     header.message_id = 1234;
 
     coap::Message message;
@@ -27,7 +27,7 @@ int main() {
 
     auto response = client.receive();
     std::cout << "Received response, code: " 
-              << static_cast<int>(response.get_header().code) << "\n";
+              << response.get_header().code.format_code() << "\n";
 
     return 0;
 }
