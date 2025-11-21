@@ -38,11 +38,6 @@ public:
     constexpr std::uint8_t detail() const { return messageType & 0x1F; }
     constexpr std::uint8_t raw() const { return messageType; }
     
-    constexpr bool is_request() const { return code_class() == 0; }
-    constexpr bool is_success() const { return code_class() == 2; }
-    constexpr bool is_client_error() const { return code_class() == 4; }
-    constexpr bool is_server_error() const { return code_class() == 5; }
-    
     std::string format_code() const {
         return std::to_string(code_class()) + "." + 
                (detail() < 10 ? "0" : "") + std::to_string(detail());

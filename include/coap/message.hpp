@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "coap/code.hpp"
+#include "coap/option.hpp"
 
 namespace coap {
 
@@ -27,13 +28,21 @@ class Message {
 public:
     Message() = default;
 
-    void set_header(Header header);
-    const Header& get_header() const;
+    // Builder-style methods (return *this for chaining)
+    Message& set_type(Type type);
+    Message& set_code(Code code);
+    Message& set_message_id(std::uint16_t id);
+    Message& add_token(std::vector<std::uint8_t> token);
+    Message& add_option(Option option);
+    Message& add_uri_path(const std::string& uri_segment);
+    Message& set_payload(std::vector<std::uint8_t> payload);
+    Message& set_payload(const std::string& payload);
 
-    void set_token(std::vector<std::uint8_t> token);
-    const std::vector<std::uint8_t>& get_token() const;
-    void set_payload(std::vector<std::uint8_t> payload);
-    const std::vector<std::uint8_t>& get_payload() const;
+    // Const accessors
+    const Header& get_header() const { return header; }
+    const std::vector<std::uint8_t>& get_token() const { return token; }
+    const std::vector<Option>& get_options() const { return options; }
+    const std::vector<std::uint8_t>& get_payload() const { return payload; }
 
     std::vector<std::uint8_t> serialize() const;
     static Message parse(const std::vector<std::uint8_t>& buffer);
@@ -44,6 +53,7 @@ private:
 
     Header header {};
     std::vector<std::uint8_t> token {};
+    std::vector<Option> options {};
     std::vector<std::uint8_t> payload {};
 };
 

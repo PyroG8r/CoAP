@@ -37,6 +37,7 @@ enum class ContentFormat : std::uint16_t {
 class Option {
 public:
     Option(OptionType type, std::vector<std::uint8_t> value);
+    Option(OptionType type, const std::string& value);
 
     OptionType get_type() const { return option_type; }
     const std::vector<std::uint8_t>& get_value() const { return value; }
