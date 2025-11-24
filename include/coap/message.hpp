@@ -35,6 +35,8 @@ public:
     Message& add_token(std::vector<std::uint8_t> token);
     Message& add_option(Option option);
     Message& add_uri_path(const std::string& uri_segment);
+    Message& build_uri_path(const std::string& path);
+    Message& set_content_format(ContentFormat format);
     Message& set_payload(std::vector<std::uint8_t> payload);
     Message& set_payload(const std::string& payload);
 

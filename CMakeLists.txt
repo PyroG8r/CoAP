@@ -19,6 +19,7 @@ add_executable(coap_client
     src/message.cpp
     src/client.cpp
     src/option.cpp
+    src/cli.cpp
 )
 if(COAP_ENABLE_WARNINGS)
     target_compile_options(coap_client PRIVATE ${_warning_flags})

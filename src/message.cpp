@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <stdexcept>
-
 namespace coap {
 
 std::uint8_t Message::encode_first_byte(const Header& header) {
@@ -56,7 +55,7 @@ Message Message::parse(const std::vector<std::uint8_t>& buffer) {
             buffer.begin() + 4,
             buffer.begin() + 4 + message.header.token_length);
     }
-    const auto options_start = 4 + message.header.token_length;
+    const std::size_t options_start = 4 + message.header.token_length;
 
     std::size_t payload_marker = buffer.size();
     for (std::size_t i = options_start; i < buffer.size(); ++i) {
@@ -65,7 +64,7 @@ Message Message::parse(const std::vector<std::uint8_t>& buffer) {
             break;
         }
     }
-    const auto options_end = payload_marker;
+    const std::size_t options_end = payload_marker;
     
     // Decode options if present
     if (options_start < options_end) {
@@ -116,7 +115,38 @@ Message& Message::add_uri_path(const std::string& uri_segment) {
     return *this;
 }
 
-Message& Message::set_payload(std::vector<std::uint8_t> payload) {
+Message& Message::build_uri_path(const std::string& path) {
+    if (path == "/" || path.empty()) {
+        return *this;
+    }
+    
+    std::string current_segment;
+    for (size_t i = 1; i < path.length(); ++i) {
+        if (path[i] == '/') {
+            if (!current_segment.empty()) {
+                add_uri_path(current_segment);
+                current_segment.clear();
+            }
+        } else {
+            current_segment += path[i];
+        }
+    }
+    
+    if (!current_segment.empty()) {
+        add_uri_path(current_segment);
+    }
+    
+    return *this;
+}
+
+Message& Message::set_content_format(ContentFormat format) {
+    std::vector<std::uint8_t> value{static_cast<std::uint8_t>(format)};
+    options.emplace_back(OptionType::ContentFormat, std::move(value));
+    return *this;
+}
+
+Message& Message::set_payload(std::vector<std::uint8_t> payload)
+{
     this->payload = std::move(payload);
     return *this;
 }

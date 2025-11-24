@@ -16,6 +16,8 @@ public:
     bool send(const Message& message);
     Message receive();
     void close();
+    
+    static std::string resolve_hostname(const std::string& hostname);
 
 private:
     int client_socket {-1};

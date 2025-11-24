@@ -51,6 +51,7 @@ private:
     std::vector<std::uint8_t> value;
 
     static void encode_delta_length(std::uint16_t delta, std::uint16_t length, std::vector<std::uint8_t>& buffer);
+    static std::uint16_t decode_nibble_value(std::uint8_t nibble, const std::vector<std::uint8_t>& buffer, std::size_t& offset);
     static std::pair<std::uint16_t, std::uint16_t> decode_delta_length(const std::vector<std::uint8_t>& buffer, std::size_t& offset);
 };
 

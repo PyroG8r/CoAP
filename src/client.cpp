@@ -3,11 +3,29 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <netdb.h>
 
 #include <cstring>
 #include <iostream>
 
 namespace coap {
+
+std::string Client::resolve_hostname(const std::string& hostname) {
+    struct addrinfo hints{}, *result;
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    
+    if (getaddrinfo(hostname.c_str(), nullptr, &hints, &result) != 0) {
+        return "";
+    }
+    
+    char ip_str[INET_ADDRSTRLEN];
+    struct sockaddr_in* addr = reinterpret_cast<struct sockaddr_in*>(result->ai_addr);
+    inet_ntop(AF_INET, &addr->sin_addr, ip_str, INET_ADDRSTRLEN);
+    
+    freeaddrinfo(result);
+    return std::string(ip_str);
+}
 
 Client::Client() {
     client_socket = socket(AF_INET, SOCK_DGRAM, 0);
