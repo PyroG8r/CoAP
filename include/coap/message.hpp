@@ -15,6 +15,16 @@ enum class Type : std::uint8_t {
     Reset = 3
 };
 
+inline std::string type_to_string(Type type) {
+    switch (type) {
+        case Type::Confirmable: return "CON";
+        case Type::NonConfirmable: return "NON";
+        case Type::Acknowledgement: return "ACK";
+        case Type::Reset: return "RST";
+        default: return "Unknown";
+    }
+}
+
 // CoAP message header structure, 4 bytes
 struct Header {
     std::uint8_t version {1};

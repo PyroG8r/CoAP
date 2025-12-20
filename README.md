@@ -1,28 +1,78 @@
-# CoAP Client Scaffold
+# CoAP Client with Prometheus Metrics and MQTT Integration
 
-This repository is intentionally minimal so you can implement the CoAP Lab 1 client completely from scratch. Only the tooling glue (CMake project, a placeholder `main`, and a simple test harness) is provided so you can focus on your own protocol implementation.
+A CoAP (Constrained Application Protocol) client implementation with integrated Prometheus metrics and MQTT publishing capabilities, all containerized with Docker.
 
-## Current Layout
+## Features
 
-- `src/main.cpp` – prints a placeholder message; replace with your real client logic.
-- `tests/assert.hpp` – tiny `EXPECT` macro to keep dependencies out.
-- `tests/smoke_tests.cpp` – verifies the custom assertion helper works; feel free to add your own tests.
-- `CMakeLists.txt` – builds the `coap_client` executable plus the `unit_tests` target with `Debug` as the default configuration.
+- **CoAP Client**: Full-featured CoAP client supporting GET, POST, PUT, DELETE methods
+- **Prometheus Metrics**: Built-in metrics server exposing CoAP operation statistics
+- **MQTT Integration**: Automatic publishing of CoAP responses to MQTT topics
+- **Containerized**: Complete Docker setup with Mosquitto broker, Prometheus, and Grafana
 
-## Build & Test
+## Quick Start
+
+### Build and Run with Docker Compose
 
 ```bash
-cmake -S . -B build -G Ninja
-cmake --build build
-ctest --test-dir build
+# Build and start all services
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f coap-client
 ```
 
-The last command runs the smoke test to ensure the toolchain is wired up. Expand it with your own tests as you implement the CoAP features.
+### Use the CoAP Client
 
-## Next Steps
+```bash
+# Send a GET request
+docker-compose exec coap-client /app/coap_client GET coap.me /hello
 
-1. Design your message/transport abstractions (headers under `include/` or wherever you prefer).
-2. Flesh out `src/main.cpp` to parse CLI arguments and drive your CoAP logic.
-3. Add unit/integration tests to `tests/` and register them in `CMakeLists.txt`.
+# Send a POST request with payload
+docker-compose exec coap-client /app/coap_client POST your-server.com /api/data -p "Hello, CoAP!"
+```
 
-Use this scaffold as a clean slate and iterate however you like.
+### Access Services
+
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000 (admin/admin)
+- **CoAP Metrics**: http://localhost:8080/metrics
+- **Mosquitto MQTT**: localhost:1883
+
+## Metrics
+
+The application exposes Prometheus metrics at `http://localhost:8080/metrics`:
+
+- `coap_requests_sent_total` - Total CoAP requests sent
+- `coap_responses_received_total` - Total CoAP responses received
+- `coap_request_errors_total` - Total CoAP request errors
+- `mqtt_messages_published_total` - Total MQTT messages published
+- `coap_last_response_time_ms` - Last response time in milliseconds
+- `coap_request_duration_seconds` - Request duration histogram
+
+## Environment Variables
+
+- `METRICS_PORT` - Metrics endpoint port (default: 8080)
+- `MQTT_BROKER` - MQTT broker hostname (default: mosquitto)
+- `MQTT_PORT` - MQTT broker port (default: 1883)
+- `MQTT_TOPIC` - MQTT topic for responses (default: coap/responses)
+
+## Development
+
+```bash
+# Local build
+cmake -S . -B build -G Ninja
+cmake --build build
+./build/coap_client GET coap.me /hello
+
+# Docker build
+docker build -t coap-client .
+```
+
+## Cleanup
+
+```bash
+docker-compose down -v
+```

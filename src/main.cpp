@@ -15,12 +15,7 @@ int main(int argc, char* argv[]) {
     
     const auto& args = parser.get_args();
     
-    // Resolve hostname to IP
     std::string ip = coap::Client::resolve_hostname(args.host);
-    if (ip.empty()) {
-        std::cerr << "Failed to resolve hostname: " << args.host << "\n";
-        return 1;
-    }
     
     std::cout << "Resolved " << args.host << " to " << ip << "\n";
     
@@ -32,7 +27,7 @@ int main(int argc, char* argv[]) {
     coap::Message message;
     message.set_type(coap::Type::Confirmable)
            .set_code(args.code)
-           .set_message_id(1234)
+           .set_message_id(6666)
            .build_uri_path(args.path);
     
     // Add payload if present (for POST/PUT)
@@ -54,7 +49,7 @@ int main(int argc, char* argv[]) {
     auto response = client.receive();
     std::cout << "\n=== Response ===\n";
     std::cout << "Code: " << response.get_header().code.format_code() << "\n";
-    std::cout << "Type: " << static_cast<int>(response.get_header().type) << "\n";
+    std::cout << "Type: " << coap::type_to_string(response.get_header().type) << "\n";
     std::cout << "Message ID: " << response.get_header().message_id << "\n";
     
     // Print payload if present
