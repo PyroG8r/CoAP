@@ -1,78 +1,96 @@
-# CoAP Client with Prometheus Metrics and MQTT Integration
+# CoAP Client
 
-A CoAP (Constrained Application Protocol) client implementation with integrated Prometheus metrics and MQTT publishing capabilities, all containerized with Docker.
+A lightweight CoAP (Constrained Application Protocol) client implementation in C++17 that supports standard CoAP methods over UDP.
 
 ## Features
 
-- **CoAP Client**: Full-featured CoAP client supporting GET, POST, PUT, DELETE methods
-- **Prometheus Metrics**: Built-in metrics server exposing CoAP operation statistics
-- **MQTT Integration**: Automatic publishing of CoAP responses to MQTT topics
-- **Containerized**: Complete Docker setup with Mosquitto broker, Prometheus, and Grafana
+- **CoAP Protocol Support**: Implements RFC 7252 CoAP protocol
+- **HTTP Methods**: Supports GET, POST, PUT, DELETE operations
+- **URI Options**: Automatic URI-Path option handling
+- **Content Formats**: Support for text/plain and other content types
+- **Hostname Resolution**: DNS resolution for CoAP server addresses
+- **UDP Transport**: Native UDP socket implementation
+- **Command-Line Interface**: Simple CLI for sending CoAP requests
 
-## Quick Start
+## Building
 
-### Build and Run with Docker Compose
+The project uses CMake with Ninja as the build system.
 
 ```bash
-# Build and start all services
-docker-compose up -d
+# Configure
+cmake -S . -B build -G Ninja
 
-# Check service status
-docker-compose ps
+# Build
+cmake --build build
 
-# View logs
-docker-compose logs -f coap-client
+# Run tests (if available)
+cd build && ctest
 ```
 
-### Use the CoAP Client
+## Usage
+
+```bash
+./build/coap_client <METHOD> <HOST> <PATH> [OPTIONS]
+```
+
+### Examples
 
 ```bash
 # Send a GET request
-docker-compose exec coap-client /app/coap_client GET coap.me /hello
+./build/coap_client GET coap.me /hello
+
+# Send a GET request with custom port
+./build/coap_client GET coap.me /test -port 5683
 
 # Send a POST request with payload
-docker-compose exec coap-client /app/coap_client POST your-server.com /api/data -p "Hello, CoAP!"
+./build/coap_client POST example.com /api/data -p "Hello, CoAP!"
+
+# Send a PUT request
+./build/coap_client PUT example.com /resource -p '{"key":"value"}'
+
+# Send a DELETE request
+./build/coap_client DELETE example.com /resource/123
 ```
 
-### Access Services
+### Command-Line Options
 
-- **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **CoAP Metrics**: http://localhost:8080/metrics
-- **Mosquitto MQTT**: localhost:1883
+- `<METHOD>`: CoAP method (GET, POST, PUT, DELETE)
+- `<HOST>`: CoAP server hostname or IP address
+- `<PATH>`: URI path (must start with /)
+- `-p, --payload <DATA>`: Request payload (for POST/PUT)
+- `-port <PORT>`: Server port (default: 5683)
 
-## Metrics
+## Project Structure
 
-The application exposes Prometheus metrics at `http://localhost:8080/metrics`:
+```
+CoAP/
+├── include/coap/       # Header files
+│   ├── client.hpp      # CoAP client implementation
+│   ├── message.hpp     # CoAP message format
+│   ├── option.hpp      # CoAP options
+│   ├── code.hpp        # CoAP response codes
+│   └── cli.hpp         # Command-line parser
+├── src/                # Source files
+│   ├── main.cpp        # Application entry point
+│   ├── client.cpp      # UDP client & DNS resolution
+│   ├── message.cpp     # Message serialization
+│   ├── option.cpp      # Option encoding
+│   └── cli.cpp         # CLI argument parsing
+└── CMakeLists.txt      # Build configuration
+```
 
-- `coap_requests_sent_total` - Total CoAP requests sent
-- `coap_responses_received_total` - Total CoAP responses received
-- `coap_request_errors_total` - Total CoAP request errors
-- `mqtt_messages_published_total` - Total MQTT messages published
-- `coap_last_response_time_ms` - Last response time in milliseconds
-- `coap_request_duration_seconds` - Request duration histogram
+## Requirements
 
-## Environment Variables
-
-- `METRICS_PORT` - Metrics endpoint port (default: 8080)
-- `MQTT_BROKER` - MQTT broker hostname (default: mosquitto)
-- `MQTT_PORT` - MQTT broker port (default: 1883)
-- `MQTT_TOPIC` - MQTT topic for responses (default: coap/responses)
+- C++17 compatible compiler (GCC 7+, Clang 5+)
+- CMake 3.16+
+- Ninja build system
+- Linux (uses POSIX sockets)
 
 ## Development
 
+Enable compiler warnings during development:
+
 ```bash
-# Local build
-cmake -S . -B build -G Ninja
+cmake -S . -B build -G Ninja -DCOAP_ENABLE_WARNINGS=ON
 cmake --build build
-./build/coap_client GET coap.me /hello
-
-# Docker build
-docker build -t coap-client .
-```
-
-## Cleanup
-
-```bash
-docker-compose down -v
 ```
