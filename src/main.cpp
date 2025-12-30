@@ -22,6 +22,10 @@ namespace {
 }
 
 int main(int argc, char* argv[]) {
+    // Disable stdout buffering for immediate Docker logging
+    std::cout.setf(std::ios::unitbuf);
+    std::cerr.setf(std::ios::unitbuf);
+    
     // Setup signal handlers
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);

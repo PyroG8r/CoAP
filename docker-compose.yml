@@ -1,35 +1,20 @@
 version: '3.8'
 
 services:
-  mosquitto:
-    image: eclipse-mosquitto:2
-    container_name: mosquitto
-    ports:
-      - "1883:1883"
-      - "9001:9001"
-    volumes:
-      - mosquitto_data:/mosquitto/data
-      - mosquitto_logs:/mosquitto/log
-    restart: unless-stopped
-
   coap-gateway:
     build: .
     container_name: coap-gateway
     environment:
-      - COAP_HOST=${COAP_HOST:-coap.me}
-      - COAP_PORT=${COAP_PORT:-5683}
-      - COAP_PATH=${COAP_PATH:-/hello}
-      - MQTT_BROKER=mosquitto
-      - MQTT_PORT=1883
-      - MQTT_TOPIC=${MQTT_TOPIC:-coap/data}
-      - POLL_INTERVAL=${POLL_INTERVAL:-10}
+      - COAP_HOST=${COAP_HOST}
+      - COAP_PORT=${COAP_PORT}
+      - COAP_PATH=${COAP_PATH}
+      - MQTT_BROKER=${MQTT_BROKER}
+      - MQTT_PORT=${MQTT_PORT}
+      - MQTT_TOPIC=${MQTT_TOPIC}
+      - POLL_INTERVAL=${POLL_INTERVAL}
       - METRICS_PORT=9090
     ports:
       - "9090:9090"
-    depends_on:
-      - mosquitto
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
-
-volumes:
-  mosquitto_data:
-  mosquitto_logs:

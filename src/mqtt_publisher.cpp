@@ -18,7 +18,7 @@ bool MqttPublisher::publish(const std::string& message) {
     cmd << "mosquitto_pub -h " << broker_host 
         << " -p " << broker_port
         << " -t " << topic
-        << " -m '" << message << "' 2>/dev/null";
+        << " -m '" << message << "'";
     
     int result = std::system(cmd.str().c_str());
     
