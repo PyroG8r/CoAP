@@ -1,78 +1,270 @@
-# CoAP Client with Prometheus Metrics and MQTT Integration
+# CoAP to MQTT Gateway
 
-A CoAP (Constrained Application Protocol) client implementation with integrated Prometheus metrics and MQTT publishing capabilities, all containerized with Docker.
+A lightweight IoT gateway that bridges CoAP (Constrained Application Protocol) devices to MQTT infrastructure with built-in Prometheus monitoring. Perfect for Industrial IoT (IIoT) deployments where you need to integrate resource-constrained CoAP sensors with modern cloud-native monitoring and messaging systems.
+
+## What It Does
+
+This application acts as a **protocol translator gateway** that:
+
+1. **Polls CoAP Endpoints** - Continuously queries CoAP servers at configurable intervals
+2. **Forwards Data to MQTT** - Publishes received CoAP responses to MQTT topics for downstream processing
+3. **Exposes Metrics** - Provides real-time Prometheus metrics for monitoring gateway health and performance
+4. **Runs in Docker** - Fully containerized for easy deployment in cloud or edge environments
+
+### Use Cases
+
+- **IIoT Sensor Integration**: Connect CoAP-based sensors (temperature, humidity, motion) to MQTT-based cloud platforms
+- **Edge-to-Cloud Bridge**: Translate lightweight CoAP protocol to enterprise-grade MQTT messaging
+- **Protocol Modernization**: Integrate legacy CoAP devices into modern microservices architectures
+- **Multi-Protocol IoT**: Build systems that combine CoAP devices with MQTT clients and cloud services
+
+## Architecture
+
+```
+CoAP Device → Gateway (CoAP Client) → MQTT Broker → Cloud/Analytics
+                      ↓
+                Prometheus Metrics (port 9090)
+                      ↓
+                Grafana Dashboard
+```
 
 ## Features
 
-- **CoAP Client**: Full-featured CoAP client supporting GET, POST, PUT, DELETE methods
-- **Prometheus Metrics**: Built-in metrics server exposing CoAP operation statistics
-- **MQTT Integration**: Automatic publishing of CoAP responses to MQTT topics
-- **Containerized**: Complete Docker setup with Mosquitto broker, Prometheus, and Grafana
+- **CoAP Client**: Full RFC 7252 implementation supporting GET, POST, PUT, DELETE methods
+- **Automatic Polling**: Configurable interval-based querying of CoAP endpoints
+- **MQTT Publisher**: Reliable message forwarding to any MQTT broker
+- **Prometheus Metrics**: Built-in metrics server exposing operational statistics
+- **Production Ready**: Signal handling, error recovery, and structured logging
+- **Cloud Native**: Containerized with Docker, ready for Kubernetes deployment
 
 ## Quick Start
 
-### Build and Run with Docker Compose
+### 1. Configure Environment
+
+Create a `.env` file with your settings:
 
 ```bash
-# Build and start all services
+# CoAP Server Configuration
+COAP_HOST=coap.me              # Target CoAP server hostname
+COAP_PORT=5683                 # CoAP server port (default: 5683)
+COAP_PATH=/hello               # Resource path to query
+
+# MQTT Broker Configuration
+MQTT_BROKER=mqtt.example.com   # MQTT broker hostname
+MQTT_PORT=1883                 # MQTT broker port
+MQTT_TOPIC=sensors/coap        # Topic to publish responses
+
+# Gateway Settings
+POLL_INTERVAL=10               # Polling interval in seconds
+METRICS_PORT=9090              # Prometheus metrics port
+```
+
+### 2. Run with Docker
+
+```bash
+# Build and start the gateway
 docker-compose up -d
 
-# Check service status
-docker-compose ps
+# View real-time logs
+docker-compose logs -f
 
-# View logs
-docker-compose logs -f coap-client
+# Check metrics
+curl http://localhost:9090/metrics
 ```
 
-### Use the CoAP Client
+### 3. Access Metrics
+
+- **Metrics Endpoint**: http://localhost:9090/metrics (Prometheus format)
+- **Grafana Dashboard**: Import `grafana-dashboard.json` to visualize metrics
+
+## Prometheus Metrics
+
+The gateway exposes the following metrics at `http://localhost:9090/metrics`:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `coap_requests_sent_total` | Counter | Total number of CoAP requests sent |
+| `coap_responses_received_total` | Counter | Total number of CoAP responses received |
+| `mqtt_messages_published_total` | Counter | Total number of MQTT messages published |
+| `coap_errors_total` | Counter | Total number of errors encountered |
+| `coap_total_response_time_ms` | Counter | Cumulative CoAP response time in milliseconds |
+
+### Example Queries
+
+```promql
+# Request rate (requests/second)
+rate(coap_requests_sent_total[5m])
+
+# Success rate percentage
+(coap_responses_received_total / coap_requests_sent_total) * 100
+
+# Average response time
+rate(coap_total_response_time_ms[5m]) / rate(coap_requests_sent_total[5m])
+
+# Error rate
+rate(coap_errors_total[5m])
+```
+
+## Grafana Dashboard
+
+A pre-configured Grafana dashboard is included at `grafana-dashboard.json`. It provides:
+
+- **Real-time metrics** with 5-second auto-refresh
+- **Key performance indicators**: Total requests, responses, MQTT messages, errors
+- **Time-series graphs**: Request/response rates, latency, error rates
+- **Success rate gauge**: Visual health indicator
+
+**To import**: Dashboards → Import → Upload `grafana-dashboard.json`
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `COAP_HOST` | `localhost` | CoAP server hostname or IP |
+| `COAP_PORT` | `5683` | CoAP server port |
+| `COAP_PATH` | `/` | Resource path to query |
+| `MQTT_BROKER` | `localhost` | MQTT broker hostname |
+| `MQTT_PORT` | `1883` | MQTT broker port |
+| `MQTT_TOPIC` | `coap/data` | MQTT topic for publishing responses |
+| `POLL_INTERVAL` | `10` | Polling interval in seconds |
+| `METRICS_PORT` | `9090` | Port for Prometheus metrics endpoint |
+
+### Docker Compose
+
+The gateway uses Docker host networking to access host services:
+
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+
+This allows the container to reach services running on your host machine (e.g., local MQTT brokers).
+
+## Remote Access with Cloudflare Tunnel
+
+To expose metrics to a remote Prometheus instance:
 
 ```bash
-# Send a GET request
-docker-compose exec coap-client /app/coap_client GET coap.me /hello
+# Create tunnel
+cloudflared tunnel create coap-metrics
 
-# Send a POST request with payload
-docker-compose exec coap-client /app/coap_client POST your-server.com /api/data -p "Hello, CoAP!"
+# Route DNS
+cloudflared tunnel route dns coap-metrics metrics.yourdomain.com
+
+# Configure ~/.cloudflared/config.yml
+tunnel: coap-metrics
+credentials-file: /home/user/.cloudflared/<TUNNEL-ID>.json
+ingress:
+  - hostname: metrics.yourdomain.com
+    service: http://localhost:9090
+  - service: http_status:404
+
+# Run tunnel
+cloudflared tunnel run coap-metrics
 ```
 
-### Access Services
-
-- **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **CoAP Metrics**: http://localhost:8080/metrics
-- **Mosquitto MQTT**: localhost:1883
-
-## Metrics
-
-The application exposes Prometheus metrics at `http://localhost:8080/metrics`:
-
-- `coap_requests_sent_total` - Total CoAP requests sent
-- `coap_responses_received_total` - Total CoAP responses received
-- `coap_request_errors_total` - Total CoAP request errors
-- `mqtt_messages_published_total` - Total MQTT messages published
-- `coap_last_response_time_ms` - Last response time in milliseconds
-- `coap_request_duration_seconds` - Request duration histogram
-
-## Environment Variables
-
-- `METRICS_PORT` - Metrics endpoint port (default: 8080)
-- `MQTT_BROKER` - MQTT broker hostname (default: mosquitto)
-- `MQTT_PORT` - MQTT broker port (default: 1883)
-- `MQTT_TOPIC` - MQTT topic for responses (default: coap/responses)
+Now your Prometheus can scrape `https://metrics.yourdomain.com/metrics`
 
 ## Development
 
-```bash
-# Local build
-cmake -S . -B build -G Ninja
-cmake --build build
-./build/coap_client GET coap.me /hello
+### Local Build
 
-# Docker build
-docker build -t coap-client .
+```bash
+# Configure with CMake
+cmake -S . -B build -G Ninja
+
+# Build the project
+cmake --build build
+
+# Run tests
+cd build && ctest
+
+# Run locally (not in gateway mode)
+./build/coap_client
+```
+
+### Project Structure
+
+```
+├── src/                    # Source files
+│   ├── main.cpp           # Gateway application entry point
+│   ├── client.cpp         # CoAP client implementation
+│   ├── message.cpp        # CoAP message encoding/decoding
+│   ├── mqtt_publisher.cpp # MQTT publishing logic
+│   ├── metrics.cpp        # Prometheus metrics collector
+│   └── metrics_server.cpp # HTTP server for metrics endpoint
+├── include/coap/          # Header files
+├── CMakeLists.txt         # Build configuration
+├── Dockerfile             # Container image definition
+├── docker-compose.yml     # Docker orchestration
+└── grafana-dashboard.json # Pre-built Grafana dashboard
+```
+
+### Adding Features
+
+The codebase is modular:
+- **CoAP Protocol**: Extend [client.cpp](src/client.cpp) and [message.cpp](src/message.cpp)
+- **Metrics**: Add new metrics in [metrics.cpp](src/metrics.cpp)
+- **MQTT**: Modify publishing logic in [mqtt_publisher.cpp](src/mqtt_publisher.cpp)
+- **Gateway Behavior**: Update polling logic in [main.cpp](src/main.cpp)
+
+## Troubleshooting
+
+### Gateway not connecting to CoAP server
+
+```bash
+# Check if CoAP server is reachable
+docker-compose exec coap-gateway ping <COAP_HOST>
+
+# Verify DNS resolution
+docker-compose exec coap-gateway nslookup <COAP_HOST>
+```
+
+### MQTT messages not published
+
+```bash
+# Check MQTT broker connectivity
+docker-compose logs coap-gateway | grep MQTT
+
+# Test MQTT broker manually
+mosquitto_sub -h <MQTT_BROKER> -p <MQTT_PORT> -t <MQTT_TOPIC>
+```
+
+### Metrics not accessible
+
+```bash
+# Check if metrics server started
+docker-compose logs coap-gateway | grep "Metrics server"
+
+# Test metrics endpoint
+curl http://localhost:9090/metrics
 ```
 
 ## Cleanup
 
 ```bash
+# Stop the gateway
+docker-compose down
+
+# Remove containers and volumes
 docker-compose down -v
+
+# Remove images
+docker-compose down --rmi all
 ```
+
+## License
+
+This project implements CoAP according to [RFC 7252](https://datatracker.ietf.org/doc/html/rfc7252).
+
+## Contributing
+
+Contributions welcome! Areas for improvement:
+- Additional CoAP message types (NON, ACK, RST)
+- CoAP DTLS security
+- Block-wise transfers for large payloads
+- Observing resources (CoAP Observe)
+- Multi-endpoint polling
+- Configurable retry logic
