@@ -7,7 +7,17 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     ninja-build \
+    git \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Build Paho MQTT C library
+WORKDIR /tmp
+RUN git clone https://github.com/eclipse/paho.mqtt.c.git && \
+    cd paho.mqtt.c && \
+    git checkout v1.3.13 && \
+    cmake -Bbuild -H. -DPAHO_ENABLE_TESTING=OFF -DPAHO_BUILD_STATIC=ON && \
+    cmake --build build/ --target install
 
 WORKDIR /build
 
@@ -22,8 +32,12 @@ RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && \
 FROM ubuntu:22.04
 
 RUN apt-get update && apt-get install -y \
-    mosquitto-clients \
+    libssl3 \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy Paho MQTT C library from builder
+COPY --from=builder /usr/local/lib/libpaho-mqtt3* /usr/local/lib/
+RUN ldconfig
 
 WORKDIR /app
 

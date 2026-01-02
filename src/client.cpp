@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <errno.h>
 
 #include <cstring>
 #include <iostream>
@@ -29,6 +30,12 @@ std::string Client::resolve_hostname(const std::string& hostname) {
 
 Client::Client() {
     client_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    
+    // Set receive timeout to 5 seconds
+    struct timeval tv;
+    tv.tv_sec = 5;
+    tv.tv_usec = 0;
+    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 }
 
 Client::~Client() {
@@ -57,7 +64,11 @@ Message Client::receive() {
     ssize_t recv_len = recvfrom(client_socket, buffer.data(), buffer.size(), 0,
                                 (struct sockaddr*)&from_addr, &from_len);
     if (recv_len < 0) {
-        std::cerr << "Receive failed\n";
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            std::cerr << "Receive timeout - no response from server\n";
+        } else {
+            std::cerr << "Receive failed: " << strerror(errno) << "\n";
+        }
         return Message{};
     }
 

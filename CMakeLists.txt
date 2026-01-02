@@ -34,3 +34,6 @@ target_include_directories(coap_client PRIVATE ${PROJECT_SOURCE_DIR}/include)
 find_package(Threads REQUIRED)
 target_link_libraries(coap_client PRIVATE Threads::Threads)
 
+# Link Paho MQTT C library
+target_link_libraries(coap_client PRIVATE paho-mqtt3c)
+
